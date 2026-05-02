@@ -1,0 +1,13 @@
+Analyze the following Markdown content extracted from an image.
+This content contains an UNKNOWN number of separate financial documents (receipts, invoices, or bills).
+
+Your task:
+1. Scan the text for logical boundaries (e.g., new headers, different dates, or separate tax totals).
+2. For EVERY unique document identified, create a separate entry in the 'bills' array.
+3. CRITICAL: Do not 'share' data between bills. If an address is only found near one total, do not apply it to others.
+
+Respond ONLY with a valid JSON object:
+{json_format}
+
+Content to parse:
+{markdown_content}

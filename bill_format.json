@@ -1,0 +1,11 @@
+{
+  "bills": [
+    {
+      "vendor": "string or null",
+      "total_amount": "number or null",
+      "date": "string or null",
+      "address": "string or null",
+      "notes": "Brief description of the bill type"
+    }
+  ]
+}

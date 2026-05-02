@@ -1,0 +1,15 @@
+# --- SETUP INSTRUCTIONS ---
+# 1. Install `uv` package manager (if not available):
+#    macOS/Linux: curl -LsSf https://astral.sh/uv/install.sh | sh
+#    Windows: powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+#
+# 2. Create a virtual environment and install dependencies:
+#    uv venv
+#    uv pip install -r requirements.txt
+#
+# 3. Run the project:
+#    uv run python parse_bill.py <filepath>
+# --------------------------
+
+docling
+python-dotenv
