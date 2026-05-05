@@ -1,11 +1,19 @@
 {
-  "bills": [
+  "bill": {
+    "bill_no": "string or null",
+    "vat_no": "string or null",
+    "amount": 0.00
+  },
+  "vendor_contact": {
+    "company_name": "string or null",
+    "phone": "string or null",
+    "email": "string or null",
+    "website": "string or null"
+  },
+  "bill_items": [
     {
-      "vendor": "string or null",
-      "total_amount": "number or null",
-      "date": "string or null",
-      "address": "string or null",
-      "notes": "Brief description of the bill type"
+      "name": "string",
+      "price": 0.00
     }
   ]
 }

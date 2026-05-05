@@ -7,7 +7,7 @@ import os
 def query_ollama(markdown_content: str, model: str = "llama3") -> Optional[str]:
     """Sends the extracted Markdown to Ollama and returns the response."""
     print(f"Sending data to Ollama (model: {model})...")
-    url = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+    url = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/chat")
     
     prompt_path = os.path.join(os.path.dirname(__file__), "prompt.txt")
     with open(prompt_path, "r", encoding="utf-8") as f:
@@ -22,7 +22,16 @@ def query_ollama(markdown_content: str, model: str = "llama3") -> Optional[str]:
     
     data = {
         "model": model,
-        "prompt": prompt,
+        "messages": [
+            {
+                "role": "system", 
+                "content": "You are a specialized bill parsing assistant. Respond ONLY with valid JSON."
+            },
+            {
+                "role": "user", 
+                "content": prompt # This is your prompt containing the markdown
+            }
+        ],
         "stream": False,
         "format": "json"
     }
@@ -34,9 +43,17 @@ def query_ollama(markdown_content: str, model: str = "llama3") -> Optional[str]:
     )
     
     try:
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            return result.get("response")
+       with urllib.request.urlopen(req) as response:
+            raw_body = response.read().decode('utf-8')
+            result = json.loads(raw_body)
+            
+            # --- CRITICAL CHANGE FOR CHAT API ---
+            ai_message = result.get("message", {}).get("content")
+            
+            # Debug: See what the AI actually said
+            print(f"DEBUG: AI Output -> {ai_message}")
+            
+            return ai_message
     except urllib.error.HTTPError as e:
         error_message = e.read().decode('utf-8')
         print(f"❌ Ollama HTTP Error {e.code}: {e.reason}")

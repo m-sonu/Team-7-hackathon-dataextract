@@ -74,14 +74,37 @@ copy .env.example .env
 
 Update the values in `.env` if necessary.
 
-## Usage
+## Usage (API Server)
 
-Once the virtual environment is set up, you can run the provided scripts. If you get a `command not found: python` error, use `python3` or if you are using `uv`, use `uv run`:
+The project has been updated to run as a REST API server using **FastAPI**. 
+
+### 1. Start the Server
+
+Start the API server by running the script. If you get a `command not found: python` error, use `python3` or if you are using `uv`, use `uv run`:
 
 ```bash
 # Using uv (Recommended)
-uv run python parse_bill.py /path/to/your/image.jpg
+uv run python parse_bill.py
 
 # Or using the standard python command (make sure the virtual environment is activated)
-python3 parse_bill.py /path/to/your/image.jpg
+python3 parse_bill.py
 ```
+
+The server will start on `http://0.0.0.0:8000`.
+
+### 2. Make an API Call from Another Project
+
+You can now send files to this API from any other application (or using `curl`). 
+
+**Endpoint:** `POST /api/parse`
+**Body:** `multipart/form-data` with a field named `file` containing the file to be parsed.
+
+**Example using `curl`:**
+```bash
+curl -X POST "http://localhost:8000/api/parse" \
+     -H "accept: application/json" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@/path/to/your/image.jpg"
+```
+
+The API will extract the text, query the Ollama AI model, and return the parsed JSON data as a response.

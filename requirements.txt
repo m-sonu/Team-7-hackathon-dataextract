@@ -13,3 +13,6 @@
 
 docling
 python-dotenv
+fastapi
+uvicorn
+python-multipart
