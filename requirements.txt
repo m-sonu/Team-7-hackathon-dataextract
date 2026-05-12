@@ -12,6 +12,7 @@
 # --------------------------
 
 docling
+requests
 python-dotenv
 fastapi
 uvicorn

@@ -8,7 +8,7 @@ import logging
 from fastapi import FastAPI, UploadFile, File, HTTPException
 import uvicorn
 from extractor import extract_markdown
-from ollama_client import query_ollama
+from parsers import ParserFactory
 from dotenv import load_dotenv
 from docling.document_converter import DocumentConverter
 
@@ -65,32 +65,29 @@ async def parse_bill(file: UploadFile = File(...)):
         #     f.write(markdown_content)
         # logger.info(f"Extracted markdown saved to: {md_path}")
             
-        # Send Markdown to Ollama
-        model = os.getenv("AI_MODEL", "qwen2.5-coder:14b")
-        logger.info(f"Sending markdown to AI model: {model}")
+        # Load prompt and format for the parser
+        prompt_path = os.path.join(os.path.dirname(__file__), "prompt.txt")
+        with open(prompt_path, "r", encoding="utf-8") as f:
+            prompt_template = f.read()
+            
+        format_path = os.path.join(os.path.dirname(__file__), "bill_format.json")
+        with open(format_path, "r", encoding="utf-8") as f:
+            json_format = f.read()
+            
+        # Initialize the parser from the factory
+        parser = ParserFactory.get_parser()
         
-        markdown_content = extract_markdown(temp_path, converter)
         short_markdown = markdown_content[:4000] if markdown_content else ""
     
         ai_start = time.time()
-        # Only send the first 4000 characters to the AI
-        ollama_response = query_ollama(short_markdown, model=model)
+        # Parse the JSON response directly using the selected AI provider
+        parsed_data = parser.parse(short_markdown, prompt_template, json_format)
         ai_end = time.time()
         ai_duration = ai_end - ai_start
         
-        print(f"DEBUG: Raw AI Response -> {ollama_response}")
-        
-        # Parse the JSON response
-        parsed_data = None
-        if ollama_response and isinstance(ollama_response, str):
-            match = re.search(r'\{.*\}', ollama_response, re.DOTALL)
-            if match:
-                clean_json = match.group(0)
-                parsed_data = json.loads(clean_json)
-            else:
-                parsed_data = {"error": "No JSON found", "raw": ollama_response}
-        else:
-            parsed_data = {"error": "AI returned empty response"}
+        if not parsed_data:
+            parsed_data = {"error": "AI returned empty or invalid response"}
+            
         total_duration = time.time() - total_start_time
         logger.info(f"AI parsing completed in {ai_duration:.2f} seconds")
         logger.info(f"Total processing completed in {total_duration:.2f} seconds")
