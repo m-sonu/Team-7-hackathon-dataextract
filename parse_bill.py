@@ -86,14 +86,28 @@ async def parse_bill(file: UploadFile = File(...)):
         ai_duration = ai_end - ai_start
         
         if not parsed_data:
-            parsed_data = {"error": "AI returned empty or invalid response"}
-            
+            total_duration = time.time() - total_start_time
+            logger.info(f"AI parsing took {ai_duration:.2f} seconds but failed to return valid data")
+            logger.info(f"Total processing time was {total_duration:.2f} seconds")
+            return {
+                "success": False,
+                "error_code": "AI_PARSING_FAILED",
+                "message": "AI returned an empty or invalid structure",
+                "filename": file.filename,
+                "timings": {
+                    "markdown_extraction_seconds": round(docling_duration, 2),
+                    "ai_parsing_seconds": round(ai_duration, 2),
+                    "total_seconds": round(total_duration, 2)
+                },
+                "data": None
+            }
+
         total_duration = time.time() - total_start_time
         logger.info(f"AI parsing completed in {ai_duration:.2f} seconds")
-        logger.info(f"Total processing completed in {total_duration:.2f} seconds")
+        logger.info(f"Total processing time was {total_duration:.2f} seconds")
 
         return {
-            "status": "success",
+            "success": True,
             "filename": file.filename,
             "timings": {
                 "markdown_extraction_seconds": round(docling_duration, 2),
