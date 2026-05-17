@@ -74,7 +74,20 @@ async def parse_bill(file: UploadFile = File(...)):
         if not markdown_content:
             logger.error(f"Failed to extract markdown from {file.filename}")
             raise HTTPException(status_code=500, detail="Failed to extract markdown from document")
-            
+
+        # Reject documents that contain too little text to be a real bill.
+        # A logo or banner image typically produces < 20 chars of OCR output.
+        if len(markdown_content.strip()) < 20:
+            logger.warning(f"Document too short to be a bill ({len(markdown_content.strip())} chars): {file.filename}")
+            return {
+                "success": False,
+                "error_code": "NOT_A_BILL",
+                "message": "Document does not appear to be a receipt or invoice",
+                "filename": file.filename,
+                "timings": {"markdown_extraction_seconds": round(docling_duration, 2)},
+                "data": None,
+            }
+
         logger.info(f"Markdown extraction completed in {docling_duration:.2f} seconds")
         
         # Save the extracted markdown to a file
