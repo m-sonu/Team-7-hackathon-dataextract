@@ -11,9 +11,14 @@
 #    uv run python parse_bill.py <filepath>
 # --------------------------
 
-docling
-requests
+docling>=2.0.0
+boto3
 python-dotenv
 fastapi
 uvicorn
 python-multipart
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+onnxruntime
+rapidocr-onnxruntime

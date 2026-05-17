@@ -5,29 +5,48 @@ import re
 import json
 import time
 import logging
+from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 import uvicorn
 from extractor import extract_markdown
 from parsers import ParserFactory
 from dotenv import load_dotenv
-from docling.document_converter import DocumentConverter
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions, RapidOcrOptions
+# Import the explicit format options for PDFs and Images separately
+from docling.document_converter import DocumentConverter, PdfFormatOption, ImageFormatOption
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging
+# Configure logging — always emit to stdout (CloudWatch on AWS); also write to a
+# date-stamped file if the logs/ directory exists (new file created each day).
+log_handlers = [logging.StreamHandler()]
+if os.path.isdir("logs"):
+    log_date = datetime.now().strftime("%Y-%m-%d")
+    log_handlers.append(logging.FileHandler(f"logs/extraction_{log_date}.log"))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("logs/extraction.log"),
-        logging.StreamHandler()
-    ]
+    handlers=log_handlers,
 )
 logger = logging.getLogger("Harateko-Tanuki")
 
 app = FastAPI(title="Harateko Tanuki Bill Parser API")
-converter = DocumentConverter()
+
+# Use RapidOCR explicitly — easyocr is not installed, docling's default EasyOcrOptions would fail
+pipeline_options = PdfPipelineOptions(do_ocr=True, ocr_options=RapidOcrOptions())
+
+init_options = {
+    InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
+    InputFormat.IMAGE: ImageFormatOption(pipeline_options=pipeline_options),
+}
+
+converter = DocumentConverter(
+    allowed_formats=[InputFormat.PDF, InputFormat.IMAGE],
+    format_options=init_options,
+)
 
 @app.post("/api/parse")
 async def parse_bill(file: UploadFile = File(...)):
